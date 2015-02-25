@@ -4,15 +4,15 @@ Plugin Name: Bogo BuddyPress
 Description: Make Bogo work with BuddyPress
 Author: Markus Echterhoff
 Author URI: http://www.markusechterhoff.com
-Version: 3.0
+Version: 2.0
 License: GPLv3 or later
 */
 
 require_once( 'includes/admin-xprofile.php' );
 require_once( ABSPATH . 'wp-admin/includes/plugin.php' );
 	
-add_filter( 'bp_uri', 'bogobp_extract_lang_from_path_to_var', 11 ); // queued after regular filters
-function bogobp_extract_lang_from_path_to_var( $uri ) {
+add_filter( 'bp_uri', 'bogo_buddypress_extract_lang_from_path_to_var', 11 ); // queued after regular filters
+function bogo_buddypress_extract_lang_from_path_to_var( $uri ) {
 
 	if( !is_plugin_active( 'buddypress/bp-loader.php' ) || !is_plugin_active( 'bogo/bogo.php' ) ) {
 		return $uri;
@@ -24,14 +24,14 @@ function bogobp_extract_lang_from_path_to_var( $uri ) {
 	}
 
 	// transform /wordpress/de/ to /wordpress/?lang=de
-	$uri = preg_replace( '@^('.trailingslashit(bogobp_get_site_path()).')'.bogo_get_lang_regex().'/(.*)$@', '$1$3?lang=$2', $uri );
+	$uri = preg_replace( '@^('.trailingslashit(bogo_buddypress_get_site_path()).')'.bogo_get_lang_regex().'/(.*)$@', '$1$3?lang=$2', $uri );
 
 	return $uri;
 }
 
 /* add lang to bp root domain */
-add_filter( 'bp_core_get_root_domain', 'bogobp_append_lang_to_url', 11); // queued after regular filters
-function bogobp_append_lang_to_url( $url ) {
+add_filter( 'bp_core_get_root_domain', 'bogo_buddypress_append_lang_to_url', 11); // queued after regular filters
+function bogo_buddypress_append_lang_to_url( $url ) {
 	
 	if( !is_plugin_active( 'buddypress/bp-loader.php' ) || !is_plugin_active( 'bogo/bogo.php' ) ) {
 		return $url;
@@ -47,15 +47,15 @@ function bogobp_append_lang_to_url( $url ) {
 	return $url;
 }
 
-add_filter( 'bp_xprofile_get_groups', 'bogobp_translate_xprofile' );
-function bogobp_translate_xprofile( $groups ) {
+add_filter( 'bp_xprofile_get_groups', 'bogo_buddypress_translate_xprofile' );
+function bogo_buddypress_translate_xprofile( $groups ) {
 	
 	// leave them in default language in admin screen, no matter the currently active locale
 	if ( is_admin() ) {
 		return $groups;
 	}
 	
-	$option = get_option( 'bogobp_xprofile_data' );
+	$option = get_option( 'bogo_buddypress_xprofile_data' );
 	if ( $option  === false ) {
 		return $groups;
 	}
@@ -84,8 +84,8 @@ function bogobp_translate_xprofile( $groups ) {
 	return $groups;
 }
 
-add_filter( 'bogo_language_switcher', 'bogobp_fix_language_switcher_links' );
-function bogobp_fix_language_switcher_links( $output ) {
+add_filter( 'bogo_language_switcher', 'bogo_buddypress_fix_language_switcher_links' );
+function bogo_buddypress_fix_language_switcher_links( $output ) {
 
 	if ( !is_buddypress() ) {
 		return $output;
@@ -105,7 +105,7 @@ function bogobp_fix_language_switcher_links( $output ) {
 		}
 
 		// construct uri
-		$uri_site_path = bogobp_get_site_path();
+		$uri_site_path = bogo_buddypress_get_site_path();
 		$path_remaining = substr( $_SERVER['REQUEST_URI'], strlen( $uri_site_path ), strlen( $_SERVER['REQUEST_URI'] ) - strlen( $uri_site_path ) );
 		if ( $item_locale == bogo_get_default_locale() ) {
 			$path_remaining = substr( $path_remaining, 3, strlen( $path_remaining ) - 3 );
@@ -123,7 +123,7 @@ function bogobp_fix_language_switcher_links( $output ) {
 	return $dom->saveHTML();
 }
 
-function bogobp_get_site_path() {
+function bogo_buddypress_get_site_path() {
 	$parts = parse_url( site_url() );
 	if ( !isset( $parts['path'] ) ) {
 		return '/';
