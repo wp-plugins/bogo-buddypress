@@ -8,15 +8,14 @@ add_action('admin_menu', function() {
 		return;
 	}
 	
-	$page_hook = add_users_page( _x( 'Bogo BuddyPress Extended Profile translation', 'admin page title', 'bogobp' ), 'BogoBP XProfile', 'manage_options', 'bogobp-xprofile-translation', 'bogobp_admin_display_xprofile_translation_page' );
+	$page_hook = add_users_page( _x( 'Bogo BuddyPress Extended Profile translation', 'admin page title', 'bogobp' ), 'BogoBP XProfile', 'manage_options', 'bogobp-xprofile-translation', 'bogo_buddypress_admin_display_xprofile_translation_page' );
 	
 	add_action( 'admin_print_styles-' . $page_hook, function() {
 		wp_enqueue_style( 'bogobp-admin-xprofile', plugins_url( 'admin-xprofile.css', __FILE__ ) );
 	});
-	
 });
 
-function bogobp_admin_display_xprofile_translation_page() {
+function bogo_buddypress_admin_display_xprofile_translation_page() {
 	
 	if ( !current_user_can( 'manage_options' ) )  {
 		wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
@@ -31,24 +30,39 @@ function bogobp_admin_display_xprofile_translation_page() {
 	
 	$default_locale = bogo_get_default_locale();
 	$languages = array( $default_locale => bogo_get_language( $default_locale ) ) + bogo_available_languages();
+
+	// adapted from BP_XProfile_Field::get_children() in bp-xrofile-classes.php
+	global $wpdb, $bp;
 	
-	$groups = bp_xprofile_get_groups( array(
-			'hide_empty_groups'      => false,
-			'hide_empty_fields'      => false,
-			'fetch_fields'           => true,
-		)
-	);
+	$group_objects = $wpdb->get_results( "SELECT * FROM {$bp->profile->table_name_groups};" );
+	$groups = array();
+	foreach ( $group_objects as $go ) {
+		$groups[$go->id]['name'] = $go->name;
+		$groups[$go->id]['dsc'] = $go->description;
+		$groups[$go->id]['fields'] = array();
+	}
+	
+	$field_objects = $wpdb->get_results( "SELECT * FROM {$bp->profile->table_name_fields};" );
+	foreach ( $field_objects as $fo ) {
+		if ( $fo->parent_id == 0 ) {
+			$groups[$fo->group_id]['fields'][$fo->id]['name'] = $fo->name;
+			$groups[$fo->group_id]['fields'][$fo->id]['dsc'] = $fo->description;
+		} else {
+			$groups[$fo->group_id]['fields'][$fo->parent_id]['children'][$fo->id]['name'] = $fo->name;
+			$groups[$fo->group_id]['fields'][$fo->parent_id]['children'][$fo->id]['dsc'] = $fo->description;
+		}
+	}
 
 	$option = get_option( 'bogobp_xprofile_data' );
 	
 	if ( isset( $_GET['save'] ) ) {
 	
 		$new_option = array();
-		foreach ( $_POST as $locale_key => $translation ) {
-			list( $locale, $key, $type ) = explode( '%', $locale_key );
+		foreach ( $_POST as $id => $translation ) {
+			list( $locale, $group_id, $field_id, $parent_id, $type ) = explode( '%', $id );
 			$translation = sanitize_text_field( $translation );
 			if ( $translation ) {
-				$new_option[$locale][$key][$type] = $translation;
+				$new_option[$locale][$group_id][$field_id][$parent_id][$type] = $translation;
 			}
 		}
 
@@ -77,18 +91,28 @@ function bogobp_admin_display_xprofile_translation_page() {
 			}
 		echo '</thead><tbody>';
 			echo '<tr class="empty"><td>&nbsp;</td></tr>';
-			$odd = true;
-			foreach ( $groups as $group ) {
-				bogobp_admin_display_xprofile_item_name( $languages, $default_locale, $option, $group, $odd );
-				if ( isset( $group->description ) && !empty( $group->description ) ) {
-					bogobp_admin_display_xprofile_item_description( $languages, $default_locale, $option, $group, $odd );
+			foreach ( $groups as $group_id => $group ) {
+				bogo_buddypress_admin_display_xprofile_item_name( $languages, $default_locale, $option, $group, $group_id, 0, 0 );
+				if ( isset( $group['dsc'] ) && !empty( $group['dsc'] ) ) {
+					bogo_buddypress_admin_display_xprofile_item_description( $languages, $default_locale, $option, $group, $group_id, 0, 0 );
 				}
-				foreach ( $group->fields as $field ) {
-					bogobp_admin_display_xprofile_item_name( $languages, $default_locale, $option, $field, $odd );
-					if ( isset( $field->description ) && !empty( $field->description ) ) {
-						bogobp_admin_display_xprofile_item_description( $languages, $default_locale, $option, $field, $odd );
+				if ( !isset( $group['fields'] ) ) {
+					continue;
+				}
+				foreach ( $group['fields'] as $field_id => $field ) {
+					bogo_buddypress_admin_display_xprofile_item_name( $languages, $default_locale, $option, $field, $group_id, $field_id, 0 );
+					if ( isset( $field['dsc'] ) && !empty( $field['dsc'] ) ) {
+						bogo_buddypress_admin_display_xprofile_item_description( $languages, $default_locale, $option, $field, $group_id, $field_id, 0 );
 					}
-					$odd = !$odd;
+					if ( !isset( $field['children'] ) ) {
+						continue;
+					}
+					foreach ( $field['children'] as $parent_id => $child ) {
+						bogo_buddypress_admin_display_xprofile_item_name( $languages, $default_locale, $option, $child, $group_id, $field_id, $parent_id );
+						if ( isset( $child['dsc'] ) && !empty( $child['dsc'] ) ) {
+							bogo_buddypress_admin_display_xprofile_item_description( $languages, $default_locale, $option, $child, $group_id, $field_id, $parent_id );
+						}
+					}
 				}
 				echo '<tr class="empty"><td>&nbsp;</td></tr>';
 			}
@@ -100,32 +124,30 @@ function bogobp_admin_display_xprofile_translation_page() {
 	echo '</div>';
 }
 
-function bogobp_admin_display_xprofile_item_name( $languages, $default_locale, $option, $item, $odd ) {
-	echo '<tr class="' . ( $odd ? 'odd' : 'even') . '">';
+function bogo_buddypress_admin_display_xprofile_item_name( $languages, $default_locale, $option, $item, $group_id, $field_id, $parent_id ) {
+	echo '<tr>';
 	foreach ( $languages as $locale => $language ) {
 		echo '<td>';
 		if ( $locale == $default_locale ) {
-			echo '<b>' . $item->name . '</b>';
+			echo '<span class="' . ( $field_id == 0 ? 'group' : ( $parent_id == 0 ? 'field' : 'child' ) ) . '">' . stripslashes_deep( esc_html( $item['name'] ) ) . '</span>';
 		} else {
-			$key = ( isset( $item->group_id ) ? 'f' : 'g' ) . $item->id;
-			$val = isset( $option[$locale][$key]['name'] ) ? $option[$locale][$key]['name'] : '';
-			echo '<input name="' . $locale . '%' . $key . '%name' . '" type="text" value="' . $val .'" />';
+			$val = isset( $option[$locale][$group_id][$field_id][$parent_id]['name'] ) ? $option[$locale][$group_id][$field_id][$parent_id]['name'] : '';
+			echo '<input name="' . $locale . '%' . $group_id . '%' . $field_id . '%' . $parent_id . '%name' . '" type="text" value="' . $val .'" />';
 		}
 		echo '</td>';
 	}
 	echo '</tr>';
 }
 
-function bogobp_admin_display_xprofile_item_description( $languages, $default_locale, $option, $item, $odd ) {
-	echo '<tr class="' . ( $odd ? 'odd' : 'even') . '">';
+function bogo_buddypress_admin_display_xprofile_item_description( $languages, $default_locale, $option, $item, $group_id, $field_id, $parent_id ) {
+	echo '<tr>';
 	foreach ( $languages as $locale => $language ) {
 		echo '<td>';
 		if ( $locale == $default_locale ) {
-			echo '<p>' . $item->description . '</p>';
+			echo '<p class="' . ( $field_id == 0 ? 'group' : ( $parent_id == 0 ? 'field' : 'child' ) ) . '">' . stripslashes_deep( esc_html( $item['dsc'] ) ) . '</p>';
 		} else {
-			$key = ( isset( $item->group_id ) ? 'f' : 'g' ) . $item->id;
-			$val = isset( $option[$locale][$key]['dsc'] ) ? $option[$locale][$key]['dsc'] : '';
-			echo '<textarea name="' . $locale . '%' . $key . '%dsc' . '">' . $val . '</textarea>';
+			$val = isset( $option[$locale][$group_id][$field_id][$parent_id]['dsc'] ) ? $option[$locale][$group_id][$field_id][$parent_id]['dsc'] : '';
+			echo '<textarea name="' . $locale . '%' . $group_id . '%' . $field_id . '%' . $parent_id . '%dsc' . '">' . $val . '</textarea>';
 		}
 		echo '</td>';
 	}

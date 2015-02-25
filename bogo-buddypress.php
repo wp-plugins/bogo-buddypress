@@ -47,41 +47,58 @@ function bogo_buddypress_append_lang_to_url( $url ) {
 	return $url;
 }
 
-add_filter( 'bp_xprofile_get_groups', 'bogo_buddypress_translate_xprofile' );
-function bogo_buddypress_translate_xprofile( $groups ) {
+add_filter( 'bp_xprofile_get_groups', 'bogo_buddypress_translate_xprofile_groups' );
+function bogo_buddypress_translate_xprofile_groups( $groups ) {
 	
 	// leave them in default language in admin screen, no matter the currently active locale
 	if ( is_admin() ) {
 		return $groups;
 	}
-	
-	$option = get_option( 'bogo_buddypress_xprofile_data' );
+
+	$option = get_option( 'bogobp_xprofile_data' );
 	if ( $option  === false ) {
 		return $groups;
 	}
-	
+
 	$locale = get_locale();
 
 	foreach ( $groups as $group ) {
-		$key = 'g' . $group->id;
-		if ( isset( $option[$locale][$key]['name'] ) ) {
-			$group->name = $option[$locale][$key]['name'];
+		if ( isset( $option[$locale][$group->id][0][0]['name'] ) ) {
+			$group->name = $option[$locale][$group->id][0][0]['name'];
 		}
-		if ( isset( $option[$locale][$key]['dsc'] ) ) {
-			$group->description = $option[$locale][$key]['dsc'];
+		if ( isset( $option[$locale][$group->id][0][0]['dsc'] ) ) {
+			$group->description = $option[$locale][$group->id][0][0]['dsc'];
 		}
 		foreach ( $group->fields as $field ) {
-			$key = 'f' . $field->id;
-			if ( isset( $option[$locale][$key]['name'] ) ) {
-				$field->name = $option[$locale][$key]['name'];
+			if ( isset( $option[$locale][$group->id][$field->id][0] ) ) {
+				$field->name = $option[$locale][$group->id][$field->id][0]['name'];
 			}
-			if ( isset( $option[$locale][$key]['dsc'] ) ) {
-				$field->description = $option[$locale][$key]['dsc'];
+			if ( isset( $option[$locale][$group->id][$field->id][0]['dsc'] ) ) {
+				$field->description = $option[$locale][$group->id][$field->id][0]['dsc'];
 			}
 		}
 	}
 
 	return $groups;
+}
+
+add_filter( 'bp_xprofile_field_get_children', 'bogo_buddypress_translate_xprofile_children' );
+function bogo_buddypress_translate_xprofile_children( $children ) {
+
+	$option = get_option( 'bogobp_xprofile_data' );
+	if ( $option  === false ) {
+		return $children;
+	}
+	
+	$locale = get_locale();
+
+	foreach ( $children as $child ) {
+		if ( isset( $option[$locale][$child->group_id][$child->parent_id][$child->id]['name'] ) ) {
+			$child->name = $option[$locale][$child->group_id][$child->parent_id][$child->id]['name'];
+		}
+	}
+	
+	return $children;
 }
 
 add_filter( 'bogo_language_switcher', 'bogo_buddypress_fix_language_switcher_links' );

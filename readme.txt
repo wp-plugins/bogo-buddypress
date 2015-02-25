@@ -34,6 +34,7 @@ Make sure you have activated the Extended Profiles Component in the BuddyPress s
 = 3.0 =
 
 * added support for language switcher
+* XProfile field options can now be translated too
 
 = 2.1 =
 
