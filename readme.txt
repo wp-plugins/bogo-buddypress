@@ -4,7 +4,7 @@ Donate link: http://www.markusechterhoff.com/donation/
 Tags: bogo, buddypress
 Requires at least: 4.0
 Tested up to: 4.1.1
-Stable tag: 2.0
+Stable tag: 2.1
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -33,6 +33,10 @@ Make sure you have activated the Extended Profiles Component in the BuddyPress s
 That is correct, Bogo does not currently support this. Please link manually for the time being.
 
 == Changelog ==
+
+= 2.1 =
+
+- made the BogoBP XProfile settings a little prettier
 
 = 2.0 =
 
