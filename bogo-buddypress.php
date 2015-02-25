@@ -6,14 +6,13 @@ Author: Markus Echterhoff
 Author URI: http://www.markusechterhoff.com
 Version: 2.0
 License: GPLv3 or later
-Text Domain: bogobp
-Domain Path: /languages
 */
+
 require_once( 'includes/admin-xprofile.php' );
 require_once( ABSPATH . 'wp-admin/includes/plugin.php' );
 	
-add_filter( 'bp_uri', 'bogo_buddypress_localize_bp_uri', 11 );
-function bogo_buddypress_localize_bp_uri( $uri ) {
+add_filter( 'bp_uri', 'bogobp_extract_lang_from_path_to_var', 11 ); // queued after regular filters
+function bogobp_extract_lang_from_path_to_var( $uri ) {
 
 	if( !is_plugin_active( 'buddypress/bp-loader.php' ) || !is_plugin_active( 'bogo/bogo.php' ) ) {
 		return $uri;
@@ -24,33 +23,34 @@ function bogo_buddypress_localize_bp_uri( $uri ) {
 		$uri = '/' . $uri;
 	}
 
-	$site_url_parts = parse_url(site_url());
-	if ( isset( $site_url_parts['path'] ) ) {
-		$uri = preg_replace( '@^('.$site_url_parts['path'].')/'.bogo_get_lang_regex().'(/.*)$@', '$1$3?lang=$2', $uri );
-	} else {
-		$uri = preg_replace( '@^/'.bogo_get_lang_regex().'(/.*)$@', '$2?lang=$1', $uri );
-	}
+	// transform /wordpress/de/ to /wordpress/?lang=de
+	$uri = preg_replace( '@^('.trailingslashit(bogobp_get_site_path()).')'.bogo_get_lang_regex().'/(.*)$@', '$1$3?lang=$2', $uri );
 
 	return $uri;
 }
 
-add_filter( 'bp_core_get_root_domain', 'bogo_buddypress_localize_bp_root_domain', 11 );
-function bogo_buddypress_localize_bp_root_domain( $url ) {
-
+/* add lang to bp root domain */
+add_filter( 'bp_core_get_root_domain', 'bogobp_append_lang_to_url', 11); // queued after regular filters
+function bogobp_append_lang_to_url( $url ) {
+	
 	if( !is_plugin_active( 'buddypress/bp-loader.php' ) || !is_plugin_active( 'bogo/bogo.php' ) ) {
 		return $url;
 	}
 	
+	// append '/de' to bp root
+	// note: $url does not have trailing slash and no trailing slash should be returned to avoid double slashes
 	$locale = get_locale();
 	if ( $locale !=  bogo_get_default_locale() ) {
 		return $url . '/' . bogo_lang_slug( $locale );
 	}
-	
+
 	return $url;
 }
 
-add_filter( 'bp_xprofile_get_groups', function( $groups ) {
+add_filter( 'bp_xprofile_get_groups', 'bogobp_translate_xprofile' );
+function bogobp_translate_xprofile( $groups ) {
 	
+	// leave them in default language in admin screen, no matter the currently active locale
 	if ( is_admin() ) {
 		return $groups;
 	}
@@ -82,6 +82,53 @@ add_filter( 'bp_xprofile_get_groups', function( $groups ) {
 	}
 
 	return $groups;
-});
+}
+
+add_filter( 'bogo_language_switcher', 'bogobp_fix_language_switcher_links' );
+function bogobp_fix_language_switcher_links( $output ) {
+
+	if ( !is_buddypress() ) {
+		return $output;
+	}
+	
+	$dom = new DOMDocument;
+	$dom->loadHTML( $output );
+	foreach( $dom->getElementsByTagName( 'li' ) as $li) { // $li is of class DOMNode
+	
+		list( $item_locale_css, $item_lang ) = explode( ' ', $li->attributes->getNamedItem( 'class' )->value);
+		$item_locale = str_replace( '-', '_', $item_locale_css);
+		
+		// skip item belonging to current locale
+		$current_locale = get_query_var( 'lang' );
+		if ( $current_locale == $item_locale ) {
+			continue;
+		}
+
+		// construct uri
+		$uri_site_path = bogobp_get_site_path();
+		$path_remaining = substr( $_SERVER['REQUEST_URI'], strlen( $uri_site_path ), strlen( $_SERVER['REQUEST_URI'] ) - strlen( $uri_site_path ) );
+		if ( $item_locale == bogo_get_default_locale() ) {
+			$path_remaining = substr( $path_remaining, 3, strlen( $path_remaining ) - 3 );
+			$uri =  $uri_site_path . $path_remaining;
+		} else {
+			$uri = $uri_site_path . '/'. $item_lang . $path_remaining;
+		}
+		
+		$a = $dom->createDocumentFragment();
+		$a->appendXML( '<a href="' . esc_url( $uri ) . '" hreflang="' . $item_locale_css . '" rel="alternate">' . $li->nodeValue . '</a>');
+		$li->nodeValue = '';
+		$li->appendChild( $a );
+	}
+	
+	return $dom->saveHTML();
+}
+
+function bogobp_get_site_path() {
+	$parts = parse_url( site_url() );
+	if ( !isset( $parts['path'] ) ) {
+		return '/';
+	}
+	return $parts['path'];
+}
 
 ?>
