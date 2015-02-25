@@ -33,29 +33,29 @@ Make sure you have activated the Extended Profiles Component in the BuddyPress s
 
 = 3.0 =
 
-- added support for language switcher
+* added support for language switcher
 
 = 2.1 =
 
-- made the BogoBP XProfile settings a little prettier
+* made the BogoBP XProfile settings a little prettier
 
 = 2.0 =
 
-- you can now translate your BuddyPress Extended Profiles
-- added localization support
+* you can now translate your BuddyPress Extended Profiles
+* added localization support
 
 = 1.3 =
 
-- added workaround for BuddyPress bug that causes some ajax calls to fail on localized pages
+* added workaround for BuddyPress bug that causes some ajax calls to fail on localized pages
 
 = 1.2 =
 
-- removal of unused rewrite rules code
+* removal of unused rewrite rules code
 
 = 1.1 =
 
-- bugfix: removed duplicate parentheses (bogo_get_lang_regex() already returns parentheses)
+* bugfix: removed duplicate parentheses (bogo_get_lang_regex() already returns parentheses)
 
 = 1.0 =
 
-- initial release
+* initial release
