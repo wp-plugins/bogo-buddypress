@@ -6,6 +6,8 @@ Author: Markus Echterhoff
 Author URI: http://www.markusechterhoff.com
 Version: 2.0
 License: GPLv3 or later
+Text Domain: bogobp
+Domain Path: /languages
 */
 require_once( 'includes/admin-xprofile.php' );
 require_once( ABSPATH . 'wp-admin/includes/plugin.php' );

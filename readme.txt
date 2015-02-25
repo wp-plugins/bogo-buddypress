@@ -29,7 +29,7 @@ Translate your BuddyPress Extended Profiles: Admin Panel -> Users -> BogoBP XPro
 = I can't find the BogoBP XProfile page =
 Make sure you have activated the Extended Profiles Component in the BuddyPress settings screen
 
-= The Bogo language switcher widget/shortcode is not working for BuddyPress sites =
+= The Bogo language switcher widget/shortcode is not working for BuddyPress pages =
 That is correct, Bogo does not currently support this. Please link manually for the time being.
 
 == Changelog ==
