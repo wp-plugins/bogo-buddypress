@@ -4,7 +4,7 @@ Plugin Name: Bogo BuddyPress
 Description: Make Bogo work with BuddyPress
 Author: Markus Echterhoff
 Author URI: http://www.markusechterhoff.com
-Version: 2.0
+Version: 2.1
 License: GPLv3 or later
 Text Domain: bogobp
 Domain Path: /languages
