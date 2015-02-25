@@ -14,7 +14,7 @@ Multilingual BuddyPress with Bogo
 
 Make your multilingual WordPress site have a multilingual social network, with Bogo and BuddyPress.
 
-Say your default language BuddyPress is located at `/members/` and you have German and Spanish translations of your website, then the localized BuddyPress versions can be viewed at `/de/members/` and `/es/members/`, respectively.
+Say your default language BuddyPress is located at `/members/` and you have German and Spanish translations of your website, then the localized BuddyPress versions can be viewed at `/de/members/` and `/es/members/` respectively.
 
 Translate your BuddyPress Extended Profiles: Admin Panel -> Users -> BogoBP XProfile
 
