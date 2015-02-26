@@ -34,7 +34,7 @@ function bogo_buddypress_admin_display_xprofile_translation_page() {
 	// adapted from BP_XProfile_Field::get_children() in bp-xrofile-classes.php
 	global $wpdb, $bp;
 	
-	$group_objects = $wpdb->get_results( "SELECT * FROM {$bp->profile->table_name_groups};" );
+	$group_objects = $wpdb->get_results( "SELECT * FROM {$bp->profile->table_name_groups} ORDER BY group_order;" );
 	$groups = array();
 	foreach ( $group_objects as $go ) {
 		$groups[$go->id]['name'] = $go->name;
@@ -42,7 +42,7 @@ function bogo_buddypress_admin_display_xprofile_translation_page() {
 		$groups[$go->id]['fields'] = array();
 	}
 	
-	$field_objects = $wpdb->get_results( "SELECT * FROM {$bp->profile->table_name_fields};" );
+	$field_objects = $wpdb->get_results( "SELECT * FROM {$bp->profile->table_name_fields} ORDER BY option_order, field_order, group_id;" );
 	foreach ( $field_objects as $fo ) {
 		if ( $fo->parent_id == 0 ) {
 			$groups[$fo->group_id]['fields'][$fo->id]['name'] = $fo->name;

@@ -33,8 +33,9 @@ Make sure you have activated the Extended Profiles Component in the BuddyPress s
 
 = 3.0 =
 
-* added support for language switcher
-* XProfile field options can now be translated too
+* added support for Bogo language switcher
+* fixed XProfile options not being displayed on XProfile translation admin page
+* added support for custom group/field/option order on XProfile translation admin page
 
 = 2.1 =
 
