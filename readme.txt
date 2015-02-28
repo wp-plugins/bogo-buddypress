@@ -20,7 +20,7 @@ Translate your BuddyPress Extended Profiles: Admin Panel -> Users -> BogoBP XPro
 
 == Installation ==
 
-1. Install [Bogo](https://wordpress.org/plugins/bogo/) and [BuddyPress](https://wordpress.org/plugins/buddypress/)
+1. Install [Bogo](https://wordpress.org/plugins/bogo/), [BuddyPress](https://wordpress.org/plugins/buddypress/) and [BogoXLib](https://wordpress.org/plugins/bogoxlib/)
 2. Install [BuddyPress language files](https://codex.buddypress.org/translations/)
 3. Install this plugin
 
@@ -33,9 +33,10 @@ Make sure you have activated the Extended Profiles Component in the BuddyPress s
 
 = 3.0 =
 
-* added support for Bogo language switcher
+* added support for Bogo language switcher (requires Bogo > 2.4.2 to work)
 * fixed XProfile options not being displayed on XProfile translation admin page
 * added support for custom group/field/option order on XProfile translation admin page
+* now using BogoXLib
 
 = 2.1 =
 

@@ -10,9 +10,24 @@ License: GPLv3 or later
 
 require_once( 'includes/admin-xprofile.php' );
 require_once( ABSPATH . 'wp-admin/includes/plugin.php' );
+
+add_action( 'admin_notices', 'bogobud_bogoxlib_check' );
+function bogobud_bogoxlib_check() {
+	if ( !is_plugin_active( 'bogoxlib/bogoxlib.php' ) ) {
+		echo '<div class="error"><p>Bogo BuddyPress requires BogoXLib to work. <a href="' . esc_url( network_admin_url('plugin-install.php?tab=plugin-information&plugin=bogoxlib' . '&TB_iframe=true&width=600&height=550' ) ) . '" class="thickbox" title="More info about BogoXLib">Install BogoXLib</a>, activate it and then re-activate Bogo BuddyPress. <b>Deactivated</b>.</p></div>';
+		deactivate_plugins( 'bogo-buddypress/bogo-buddypress.php' );
+	}
+}
+
+register_activation_hook( __FILE__, 'bogobud_activate');
+function bogobud_activate() {
+	// rename xprofile data option from Bogo BuddyPress versions < 3.0
+	global $wpdb;
+	$wpdb->query( "UPDATE {$wpdb->options} SET option_name='bogobud_xprofile_data' WHERE option_name='bogobp_xprofile_data'" );
+}
 	
-add_filter( 'bp_uri', 'bogo_buddypress_extract_lang_from_path_to_var', 11 ); // queued after regular filters
-function bogo_buddypress_extract_lang_from_path_to_var( $uri ) {
+add_filter( 'bp_uri', 'bogobud_extract_lang_from_path_to_var', 11 ); // queued after regular filters
+function bogobud_extract_lang_from_path_to_var( $uri ) {
 
 	if( !is_plugin_active( 'buddypress/bp-loader.php' ) || !is_plugin_active( 'bogo/bogo.php' ) ) {
 		return $uri;
@@ -23,15 +38,14 @@ function bogo_buddypress_extract_lang_from_path_to_var( $uri ) {
 		$uri = '/' . $uri;
 	}
 
-	// transform /wordpress/de/ to /wordpress/?lang=de
-	$uri = preg_replace( '@^('.trailingslashit(bogo_buddypress_get_site_path()).')'.bogo_get_lang_regex().'/(.*)$@', '$1$3?lang=$2', $uri );
+	$uri = bogoxlib_move_lang_slug_from_path_to_query_string( $uri );
 
 	return $uri;
 }
 
 /* add lang to bp root domain */
-add_filter( 'bp_core_get_root_domain', 'bogo_buddypress_append_lang_to_url', 11); // queued after regular filters
-function bogo_buddypress_append_lang_to_url( $url ) {
+add_filter( 'bp_core_get_root_domain', 'bogobud_append_lang_to_url', 11 ); // queued after regular filters
+function bogobud_append_lang_to_url( $url ) {
 	
 	if( !is_plugin_active( 'buddypress/bp-loader.php' ) || !is_plugin_active( 'bogo/bogo.php' ) ) {
 		return $url;
@@ -47,15 +61,15 @@ function bogo_buddypress_append_lang_to_url( $url ) {
 	return $url;
 }
 
-add_filter( 'bp_xprofile_get_groups', 'bogo_buddypress_translate_xprofile_groups' );
-function bogo_buddypress_translate_xprofile_groups( $groups ) {
+add_filter( 'bp_xprofile_get_groups', 'bogobud_translate_xprofile_groups' );
+function bogobud_translate_xprofile_groups( $groups ) {
 	
 	// leave them in default language in admin screen, no matter the currently active locale
 	if ( is_admin() ) {
 		return $groups;
 	}
 
-	$option = get_option( 'bogobp_xprofile_data' );
+	$option = get_option( 'bogobud_xprofile_data' );
 	if ( $option  === false ) {
 		return $groups;
 	}
@@ -82,10 +96,10 @@ function bogo_buddypress_translate_xprofile_groups( $groups ) {
 	return $groups;
 }
 
-add_filter( 'bp_xprofile_field_get_children', 'bogo_buddypress_translate_xprofile_children' );
-function bogo_buddypress_translate_xprofile_children( $children ) {
+add_filter( 'bp_xprofile_field_get_children', 'bogobud_translate_xprofile_children' );
+function bogobud_translate_xprofile_children( $children ) {
 
-	$option = get_option( 'bogobp_xprofile_data' );
+	$option = get_option( 'bogobud_xprofile_data' );
 	if ( $option  === false ) {
 		return $children;
 	}
@@ -99,53 +113,6 @@ function bogo_buddypress_translate_xprofile_children( $children ) {
 	}
 	
 	return $children;
-}
-
-add_filter( 'bogo_language_switcher', 'bogo_buddypress_fix_language_switcher_links' );
-function bogo_buddypress_fix_language_switcher_links( $output ) {
-
-	if ( !is_buddypress() ) {
-		return $output;
-	}
-	
-	$dom = new DOMDocument;
-	$dom->loadHTML( $output );
-	foreach( $dom->getElementsByTagName( 'li' ) as $li) { // $li is of class DOMNode
-	
-		list( $item_locale_css, $item_lang ) = explode( ' ', $li->attributes->getNamedItem( 'class' )->value);
-		$item_locale = str_replace( '-', '_', $item_locale_css);
-		
-		// skip item belonging to current locale
-		$current_lang = get_query_var( 'lang' );
-		if ( $current_lang == $item_lang ) {
-			continue;
-		}
-
-		// construct uri
-		$uri_site_path = bogo_buddypress_get_site_path();
-		$path_remaining = substr( $_SERVER['REQUEST_URI'], strlen( $uri_site_path ), strlen( $_SERVER['REQUEST_URI'] ) - strlen( $uri_site_path ) );
-		if ( $item_locale == bogo_get_default_locale() ) {
-			$path_remaining = substr( $path_remaining, 3, strlen( $path_remaining ) - 3 );
-			$uri =  $uri_site_path . $path_remaining;
-		} else {
-			$uri = $uri_site_path . '/'. $item_lang . $path_remaining;
-		}
-		
-		$a = $dom->createDocumentFragment();
-		$a->appendXML( '<a href="' . esc_url( $uri ) . '" hreflang="' . $item_locale_css . '" rel="alternate">' . $li->nodeValue . '</a>');
-		$li->nodeValue = '';
-		$li->appendChild( $a );
-	}
-	
-	return $dom->saveHTML();
-}
-
-function bogo_buddypress_get_site_path() {
-	$parts = parse_url( site_url() );
-	if ( !isset( $parts['path'] ) ) {
-		return '/';
-	}
-	return $parts['path'];
 }
 
 ?>
