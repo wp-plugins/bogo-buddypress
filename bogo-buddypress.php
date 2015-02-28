@@ -115,4 +115,12 @@ function bogobud_translate_xprofile_children( $children ) {
 	return $children;
 }
 
+add_filter( 'bogo_language_switcher', 'bogobud_fix_language_switcher_links' );
+function bogobud_fix_language_switcher_links( $output ) {
+	if ( is_buddypress() ) {
+		return bogoxlib_fix_language_switcher_links( $output );
+	}
+	return $output;
+}
+
 ?>
