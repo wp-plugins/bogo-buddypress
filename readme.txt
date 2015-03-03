@@ -18,7 +18,7 @@ Say your default language BuddyPress is located at `/members/` and you have Germ
 
 Translate your BuddyPress Extended Profiles: Admin Panel -> Users -> BogoBP XProfile
 
-All email notifications are localized to the language the user set in their profile. Also localizes URLs contained in emails when appropriate.
+All email notifications are localized to the language the user set in their profile. Also localizes URLs contained in emails where appropriate.
 
 Known limitation: Parts of the activity stream are not localized. I haven't looked at the details and I'll probably not fix it. Let me know if you do and I'll apply your patch.
 
