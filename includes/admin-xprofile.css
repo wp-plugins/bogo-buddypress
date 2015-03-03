@@ -1,0 +1,63 @@
+#bogobp-xprofile h1 {
+	margin-bottom: 1.5em;
+}
+#bogobp-xprofile p.success {
+	color: green;
+	font-size: 1.5em;
+}
+#bogobp-xprofile p.failure {
+	color: red;
+	font-size: 1.5em;	
+}
+#bogobp-xprofile table {
+	border-collapse: collapse;
+}
+#bogobp-xprofile th { 
+	padding: 10px;
+	border: 1px solid #ccc;
+}
+#bogobp-xprofile tr {
+	height: 100%;
+}
+#bogobp-xprofile td { 
+	padding: 10px;
+	width: 250px;
+	height: 100%;
+}
+#bogobp-xprofile td p {
+	margin: 0; 
+}
+#bogobp-xprofile table input {
+	font-size: 13px;
+	width: 100%;
+}
+#bogobp-xprofile table textarea {
+	font-size: 13px;
+	box-sizing: border-box;
+	width: 100%;
+	height: 100%;
+}
+span.group {
+	font-size: 1.3em;
+	font-weight: bold;
+	color: #000;
+}
+span.field {
+	font-size: 1.1em;
+	font-weight: bold;
+	color: #666;
+	padding-left: 20px;
+}
+span.child {
+	font-weight: bold;
+	color: #666;
+	padding-left: 40px;
+}
+p.group {
+}
+p.field {
+	padding-left: 20px;
+}
+p.child {
+	padding-left: 40px;
+}
