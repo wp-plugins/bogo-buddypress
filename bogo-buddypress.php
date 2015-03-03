@@ -2,12 +2,14 @@
 /*
 Plugin Name: Bogo BuddyPress
 Description: Make Bogo work with BuddyPress
+Plugin URI: http://wordpress.org/extend/plugins/bogo-buddypress/
 Author: Markus Echterhoff
 Author URI: http://www.markusechterhoff.com
 Version: 3.0
 License: GPLv3 or later
 */
 
+require_once( 'includes/registered-strings.php' );
 require_once( 'includes/admin-xprofile.php' );
 require_once( ABSPATH . 'wp-admin/includes/plugin.php' );
 
@@ -29,7 +31,7 @@ function bogobud_activate() {
 add_filter( 'bp_uri', 'bogobud_extract_lang_from_path_to_var', 11 ); // queued after regular filters
 function bogobud_extract_lang_from_path_to_var( $uri ) {
 
-	if( !is_plugin_active( 'buddypress/bp-loader.php' ) || !is_plugin_active( 'bogo/bogo.php' ) ) {
+	if( !is_plugin_active( 'buddypress/bp-loader.php' ) || !is_plugin_active( 'bogo/bogo.php' ) || !is_plugin_active( 'bogoxlib/bogoxlib.php' ) ) {
 		return $uri;
 	}
 
@@ -115,12 +117,29 @@ function bogobud_translate_xprofile_children( $children ) {
 	return $children;
 }
 
+add_action( 'template_redirect', 'bogobud_redirect_to_localized_url', 9 );
+function bogobud_redirect_to_localized_url() {
+	if ( !is_buddypress() ) {
+		return;
+	}
+	bogoxlib_redirect_user_to_localized_url();
+}
+
 add_filter( 'bogo_language_switcher', 'bogobud_fix_language_switcher_links' );
 function bogobud_fix_language_switcher_links( $output ) {
 	if ( is_buddypress() ) {
 		return bogoxlib_fix_language_switcher_links( $output );
 	}
 	return $output;
+}
+
+add_action( 'plugins_loaded' , 'bogobud_translate_emails', ~PHP_INT_MAX );
+function bogobud_translate_emails() {
+	if ( !is_plugin_active( 'bogoxlib/bogoxlib.php' ) ) {
+		return;
+	}
+	$slugs = array_map ( function($s){return '/'.$s.'/';}, array_keys( get_option( 'bp-pages' ) ) );
+	bogoxlib_localize_emails_for( 'buddypress', $slugs, bogobud_registered_strings() );
 }
 
 ?>
