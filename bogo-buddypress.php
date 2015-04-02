@@ -5,7 +5,7 @@ Description: Make Bogo work with BuddyPress
 Plugin URI: http://wordpress.org/extend/plugins/bogo-buddypress/
 Author: Markus Echterhoff
 Author URI: http://www.markusechterhoff.com
-Version: 3.0
+Version: 3.1
 License: GPLv3 or later
 */
 
@@ -125,12 +125,12 @@ function bogobud_redirect_to_localized_url() {
 	bogoxlib_redirect_user_to_localized_url();
 }
 
-add_filter( 'bogo_language_switcher', 'bogobud_fix_language_switcher_links' );
-function bogobud_fix_language_switcher_links( $output ) {
+add_filter( 'bogo_language_switcher_links', 'bogobud_fix_language_switcher_links', 10, 2 );
+function bogobud_fix_language_switcher_links( $links, $args ) {
 	if ( is_buddypress() ) {
-		return bogoxlib_fix_language_switcher_links( $output );
+		return bogoxlib_fix_language_switcher_links( $links );
 	}
-	return $output;
+	return $links;
 }
 
 add_action( 'plugins_loaded' , 'bogobud_translate_emails', ~PHP_INT_MAX );
